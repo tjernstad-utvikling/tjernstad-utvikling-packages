@@ -1,38 +1,34 @@
-import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
+'use client';
 
-import { Check } from '../icons/check';
-import { DividerHorizontal } from '../icons/dividerHorizontal';
-import React from 'react';
+import * as React from 'react';
+import { Checkbox as CheckboxPrimitive } from 'radix-ui';
+
 import { cn } from '../../lib/utils';
+import { CheckIcon, MinusIcon } from 'lucide-react';
 
-const Checkbox = React.forwardRef<
-  React.ElementRef<typeof CheckboxPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root> & {
-    indeterminate?: boolean;
-  }
->(({ className, checked, indeterminate, ...props }, ref) => {
+type CheckboxProps = React.ComponentProps<typeof CheckboxPrimitive.Root> & {
+  indeterminate?: boolean;
+};
+
+function Checkbox({ className, checked, indeterminate, ...props }: CheckboxProps) {
+  const checkedState = indeterminate ? 'indeterminate' : checked;
+
   return (
     <CheckboxPrimitive.Root
-      checked={checked ? true : indeterminate ? true : false}
-      //   onCheckedChange={setChecked}
-      ref={ref}
+      data-slot="checkbox"
+      checked={checkedState}
       className={cn(
-        'border-foreground focus:ring-ring focus:shadow-[0_0_0_5px_rgba(21, 156, 228, 0.4)] peer h-4 w-4 shrink-0 rounded-sm border shadow focus:outline-none focus:ring-1 disabled:cursor-not-allowed disabled:opacity-50',
-        'data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground',
+        'border-input dark:bg-input/30 data-checked:bg-primary data-checked:text-primary-foreground dark:data-checked:bg-primary data-checked:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground data-[state=checked]:border-primary data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground data-[state=indeterminate]:border-primary aria-invalid:aria-checked:border-primary aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 peer relative flex size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors outline-none group-has-disabled/field:opacity-50 after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:ring-3 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:ring-3 [&[data-state=indeterminate]_[data-slot=checkbox-check-icon]]:hidden [&[data-state=indeterminate]_[data-slot=checkbox-indeterminate-icon]]:block',
         className
       )}
       {...props}
     >
-      <CheckboxPrimitive.Indicator className={cn('flex items-center justify-center text-current')}>
-        {indeterminate ? (
-          <DividerHorizontal color="text-primary-foreground" />
-        ) : checked === true ? (
-          <Check color="text-primary-foreground" className="h-4 w-4" />
-        ) : null}
+      <CheckboxPrimitive.Indicator data-slot="checkbox-indicator" className="grid place-content-center text-current transition-none [&>svg]:size-3.5">
+        <CheckIcon data-slot="checkbox-check-icon" />
+        <MinusIcon data-slot="checkbox-indeterminate-icon" className="hidden" />
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
   );
-});
-Checkbox.displayName = CheckboxPrimitive.Root.displayName;
+}
 
 export { Checkbox };
