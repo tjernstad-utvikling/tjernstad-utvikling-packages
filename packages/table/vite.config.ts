@@ -16,11 +16,8 @@ export default defineConfig({
       // make sure to externalize deps that shouldn't be bundled
       // into your library
       external: [
-        '@radix-ui/react-checkbox',
-        '@radix-ui/react-switch',
-        '@radix-ui/react-dropdown-menu',
-        '@radix-ui/react-slot',
-        '@radix-ui/react-tooltip',
+        'radix-ui',
+        'lucide-react',
         'class-variance-authority',
         'clsx',
         'tailwind-merge',
