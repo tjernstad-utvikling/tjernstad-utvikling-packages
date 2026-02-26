@@ -32,7 +32,7 @@ export default function App() {
   >([]);
 
   const [selected, setSelected] = useState<number[]>();
-  const [paginationState, setPaginationState] = useState<PaginationState>({
+  const [paginationState] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
   });
@@ -72,7 +72,7 @@ export default function App() {
         cell: ({ cell }) => <StatusCell isLocked={cell.getValue<boolean>()} />,
       },
     ],
-    []
+    [],
   );
 
   const [tableState, setTableState] = useTableState<TableState>(TableKey.user, {
@@ -85,7 +85,7 @@ export default function App() {
     const pageSize = paginationState?.pageSize ?? 10;
 
     setUsers(
-      usersData.slice(pageNumber * pageSize, (pageNumber + 1) * pageSize)
+      usersData.slice(pageNumber * pageSize, (pageNumber + 1) * pageSize),
     );
   }, [usersData, paginationState]);
 
@@ -96,7 +96,7 @@ export default function App() {
       const pageSize = tableState?.pagination?.pageSize ?? 10;
 
       setUsers(
-        usersData.slice(pageNumber * pageSize, (pageNumber + 1) * pageSize)
+        usersData.slice(pageNumber * pageSize, (pageNumber + 1) * pageSize),
       );
       // setUsers(usersData);
       setIsLoading(false);
