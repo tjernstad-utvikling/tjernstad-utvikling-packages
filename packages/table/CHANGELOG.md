@@ -1,5 +1,11 @@
 # @tjernstad-utvikling/table-tw
 
+## 0.6.0
+
+### Minor Changes
+
+- improve state handling
+
 ## 0.5.0
 
 ### Minor Changes
