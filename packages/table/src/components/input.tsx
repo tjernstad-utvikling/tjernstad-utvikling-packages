@@ -27,7 +27,7 @@ export function DebouncedInput({
     }, debounce);
 
     return () => clearTimeout(timeout);
-  }, [value]);
+  }, [value, debounce, onChange]);
 
   return <TextField id={props.name} label={label} name={props.name} value={value} onChange={(e) => setValue(e.target.value)} />;
 }

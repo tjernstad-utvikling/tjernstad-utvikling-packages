@@ -94,8 +94,7 @@ function DebouncedInput({
     }, debounce);
 
     return () => clearTimeout(timeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
+  }, [value, debounce, onChange]);
 
   if (props.type === 'text') {
     return (
