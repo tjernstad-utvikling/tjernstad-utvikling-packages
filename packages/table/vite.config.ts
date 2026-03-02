@@ -26,7 +26,10 @@ export default defineConfig({
         'tailwind-merge',
         '@tanstack/match-sorter-utils',
         '@tanstack/react-table',
-        'react'
+        'react',
+        'react-dom',
+        'react/jsx-runtime',
+        'react/jsx-dev-runtime'
       ],
       output: {
         format: 'esm'

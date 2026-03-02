@@ -1,5 +1,11 @@
 # @tjernstad-utvikling/table-tw
 
+## 0.6.1
+
+### Patch Changes
+
+- externalizing packages
+
 ## 0.6.0
 
 ### Minor Changes
