@@ -18,7 +18,7 @@ import {
   type Updater,
   type VisibilityState
 } from '@tanstack/react-table';
-import { useEffect, useMemo, useRef, useState, type PropsWithChildren, type ReactElement } from 'react';
+import { useState, type PropsWithChildren, type ReactElement } from 'react';
 
 import { CheckboxHeaderCell } from './components/selection';
 import { ColumnSelect } from './components/columnSelect';
@@ -45,79 +45,36 @@ const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
 
 export function TuTable<T extends Record<string, unknown>>({ ...props }: PropsWithChildren<TableProperties<T>>): ReactElement {
   const [globalFilter, setGlobalFilter] = React.useState('');
-  const isMounted = useRef(false);
-
-  useEffect(() => {
-    isMounted.current = true;
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
-
-  const normalizedState = useMemo(
-    () => ({
-      sorting: props.tableState.sorting ?? [],
-      expanded: props.tableState.expanded ?? {},
-      columnVisibility: props.tableState.columnVisibility ?? {},
-      columnFilters: props.tableState.columnFilters ?? [],
-      grouping: props.tableState.grouping ?? []
-    }),
-    [props.tableState]
-  );
 
   function updateGrouping(update: Updater<GroupingState>) {
-    const grouping = update instanceof Function ? update(normalizedState.grouping) : update;
-
-    if (!isMounted.current) {
-      return;
-    }
-
+    const grouping = update instanceof Function ? update(props.tableState.grouping) : update;
     props.setTableState((prev) => {
       return { ...prev, grouping };
     });
   }
 
   function updateColumnFilters(update: Updater<ColumnFiltersState>) {
-    const columnFilters = update instanceof Function ? update(normalizedState.columnFilters) : update;
-
-    if (!isMounted.current) {
-      return;
-    }
-
+    const columnFilters = update instanceof Function ? update(props.tableState.columnFilters) : update;
     props.setTableState((prev) => {
       return { ...prev, columnFilters };
     });
   }
 
   function updateVisibility(update: Updater<VisibilityState>) {
-    const columnVisibility = update instanceof Function ? update(normalizedState.columnVisibility) : update;
-
-    if (!isMounted.current) {
-      return;
-    }
-
+    const columnVisibility = update instanceof Function ? update(props.tableState.columnVisibility) : update;
     props.setTableState((prev) => {
       return { ...prev, columnVisibility };
     });
   }
   function updateExpanded(update: Updater<ExpandedState>) {
-    const expanded = update instanceof Function ? update(normalizedState.expanded) : update;
-
-    if (!isMounted.current) {
-      return;
-    }
-
+    const expanded = update instanceof Function ? update(props.tableState.expanded) : update;
     props.setTableState((prev) => {
       return { ...prev, expanded };
     });
   }
 
   function updateSorting(update: Updater<SortingState>) {
-    const sorting = update instanceof Function ? update(normalizedState.sorting) : update;
-
-    if (!isMounted.current) {
-      return;
-    }
+    const sorting = update instanceof Function ? update(props.tableState.sorting) : update;
 
     props.setTableState((prev) => {
       return { ...prev, sorting };
@@ -132,11 +89,11 @@ export function TuTable<T extends Record<string, unknown>>({ ...props }: PropsWi
     },
     getCoreRowModel: getCoreRowModel(),
     state: {
-      sorting: normalizedState.sorting,
-      expanded: normalizedState.expanded,
-      columnVisibility: normalizedState.columnVisibility,
-      columnFilters: normalizedState.columnFilters,
-      grouping: normalizedState.grouping,
+      ...(props.tableState.sorting ? { sorting: props.tableState.sorting } : {}),
+      expanded: props.tableState.expanded ?? {},
+      columnVisibility: props.tableState.columnVisibility ?? {},
+      ...(props.tableState.columnFilters ? { columnFilters: props.tableState.columnFilters } : {}),
+      ...(props.tableState.grouping ? { grouping: props.tableState.grouping } : {}),
       globalFilter
     },
     onGlobalFilterChange: setGlobalFilter,
@@ -167,27 +124,11 @@ export function TuTable<T extends Record<string, unknown>>({ ...props }: PropsWi
     return '';
   }
 
-  const [selectedRows, setSelectedRows] = useState<Row<T>[]>([]);
-
-  useEffect(() => {
-    if (!props.enableSelection) {
-      return;
-    }
-
-    const selectedIds = props.selectedIds ?? [];
-
-    if (selectedIds.length === 0) {
-      setSelectedRows([]);
-      return;
-    }
-
-    const nextSelectedRows = table.getPreFilteredRowModel().rows.filter((row) => {
-      const rowId = row.getValue<number | string>('id');
-      return selectedIds.some((id) => id === rowId);
-    });
-
-    setSelectedRows(nextSelectedRows);
-  }, [props.enableSelection, props.selectedIds, table]);
+  const [selectedRows, setSelectedRows] = useState<Row<T>[]>(() =>
+    table.getPreFilteredRowModel().rows.filter((r) => {
+      return props.selectedIds?.find((o) => o === r?.getValue('id'));
+    })
+  );
 
   const handleRowSelection = useRowSelection({
     selectedRows,
@@ -235,7 +176,7 @@ export function TuTable<T extends Record<string, unknown>>({ ...props }: PropsWi
                   handleRowSelection={handleRowSelection}
                   key={row.id}
                   row={row}
-                  state={table.getState()}
+                  state={props.tableState}
                   isSelected={!!selectedRows?.find((r) => r.id === row.id)}
                   rowClassName={getRowClassName(row)}
                 />
