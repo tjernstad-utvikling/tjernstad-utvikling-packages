@@ -24,16 +24,19 @@ export function CheckboxCell<T extends {}>({ isSelected, handleRowSelection, row
 interface CheckboxHeaderCellProps<T extends {}> {
   selectedRows: Row<T>[];
   table: Table<T>;
+  setSelected: ((rows: Row<T>[]) => void) | undefined;
   setSelectedRows: (value: Row<T>[]) => void;
 }
-export function CheckboxHeaderCell<T extends {}>({ selectedRows, table, setSelectedRows }: CheckboxHeaderCellProps<T>) {
+export function CheckboxHeaderCell<T extends {}>({ selectedRows, table, setSelected, setSelectedRows }: CheckboxHeaderCellProps<T>) {
   const rows = table.getRowModel().rows;
 
   function setSelection() {
     if (rows.length === selectedRows.length) {
+      setSelected && setSelected([]);
       setSelectedRows([]);
       return;
     }
+    setSelected && setSelected(rows);
     setSelectedRows(rows);
   }
 

@@ -18,7 +18,7 @@ import {
   type Updater,
   type VisibilityState
 } from '@tanstack/react-table';
-import { useEffect, useMemo, useRef, useState, type PropsWithChildren, type ReactElement } from 'react';
+import { useEffect, useState, type PropsWithChildren, type ReactElement } from 'react';
 
 import { CheckboxHeaderCell } from './components/selection';
 import { ColumnSelect } from './components/columnSelect';
@@ -124,59 +124,30 @@ export function TuTable<T extends Record<string, unknown>>({ ...props }: PropsWi
     return '';
   }
 
-  const selectedRows = useMemo(() => {
-    if (!props.enableSelection) return [] as Row<T>[];
-
-    const selectedIds = new Set((props.selectedIds ?? []).map((id) => String(id)));
-    return table.getPreFilteredRowModel().rows.filter((row) => selectedIds.has(String(row.getValue('id'))));
-  }, [props.enableSelection, props.selectedIds, table]);
-
-  const [localSelectedRows, setLocalSelectedRows] = useState<Row<T>[]>([]);
-  const isMountedRef = useRef(false);
-  const didInitSelectionRef = useRef(false);
-  const setSelectedRef = useRef(props.setSelected);
+  const [selectedRows, setSelectedRows] = useState<Row<T>[]>([]);
 
   useEffect(() => {
-    setSelectedRef.current = props.setSelected;
-  }, [props.setSelected]);
-
-  useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    setLocalSelectedRows((prev) => {
-      const prevIds = prev.map((row) => row.id);
-      const nextIds = selectedRows.map((row) => row.id);
-      const hasEqualSelection = prevIds.length === nextIds.length && prevIds.every((id) => nextIds.includes(id));
-
-      if (hasEqualSelection) return prev;
-      return selectedRows;
-    });
-  }, [selectedRows]);
-
-  useEffect(() => {
-    if (!props.enableSelection || !isMountedRef.current) return;
-
-    if (!didInitSelectionRef.current) {
-      didInitSelectionRef.current = true;
+    if (!props.enableSelection || !props.selectedIds || props.selectedIds.length === 0) {
+      setSelectedRows((prev) => (prev.length === 0 ? prev : []));
       return;
     }
 
-    const notify = setSelectedRef.current;
-    if (notify) notify(localSelectedRows);
-  }, [localSelectedRows, props.enableSelection]);
+    const rows = table.getPreFilteredRowModel().rows.filter((row) => props.selectedIds?.some((selectedId) => selectedId === row.getValue('id')));
 
-  const localSelectedRowIdSet = useMemo(() => new Set(localSelectedRows.map((row) => row.id)), [localSelectedRows]);
+    setSelectedRows((prev) => {
+      if (prev.length === rows.length && prev.every((prevRow, index) => prevRow.id === rows[index]?.id)) {
+        return prev;
+      }
+      return rows;
+    });
+  }, [props.enableSelection, props.selectedIds, table]);
 
   const handleRowSelection = useRowSelection({
-    selectedRows: localSelectedRows,
-    setSelectedRows: setLocalSelectedRows,
+    selectedRows,
+    setSelectedRows,
     table,
-    enableSelection: props.enableSelection
+    enableSelection: props.enableSelection,
+    setSelected: props.setSelected
   });
 
   return (
@@ -199,7 +170,7 @@ export function TuTable<T extends Record<string, unknown>>({ ...props }: PropsWi
             {table.getHeaderGroups().map((headerGroup) => (
               <TwTableRow key={headerGroup.id}>
                 {props.enableSelection && (
-                  <CheckboxHeaderCell setSelectedRows={setLocalSelectedRows} selectedRows={localSelectedRows} table={table} />
+                  <CheckboxHeaderCell setSelected={props.setSelected} setSelectedRows={setSelectedRows} selectedRows={selectedRows} table={table} />
                 )}
                 {headerGroup.headers.map((header) => {
                   return <HeaderCell key={header.id} header={header} table={table} />;
@@ -218,7 +189,7 @@ export function TuTable<T extends Record<string, unknown>>({ ...props }: PropsWi
                   key={row.id}
                   row={row}
                   state={props.tableState}
-                  isSelected={localSelectedRowIdSet.has(row.id)}
+                  isSelected={!!selectedRows?.find((r) => r.id === row.id)}
                   rowClassName={getRowClassName(row)}
                 />
               );

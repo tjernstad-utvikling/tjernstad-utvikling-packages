@@ -5,10 +5,11 @@ interface UseRowSelectionProps<T> {
   selectedRows: Row<T>[];
   table: Table<T>;
   setSelectedRows: (rows: Row<T>[]) => void;
+  setSelected?: (rows: Row<T>[]) => void;
   enableSelection?: boolean;
 }
 
-export function useRowSelection<T>({ selectedRows, table, setSelectedRows, enableSelection }: UseRowSelectionProps<T>) {
+export function useRowSelection<T>({ selectedRows, table, setSelectedRows, setSelected, enableSelection }: UseRowSelectionProps<T>) {
   const lastSelectedRow = useRef<Row<T> | undefined>(undefined);
   const lastRowUnchecked = useRef<boolean>(false);
 
@@ -86,12 +87,15 @@ export function useRowSelection<T>({ selectedRows, table, setSelectedRows, enabl
         }
       }
 
-      if (enableSelection) setSelectedRows(updatedSelectedRows);
+      if (setSelected && enableSelection) {
+        setSelectedRows(updatedSelectedRows);
+        setSelected(updatedSelectedRows);
+      }
       // set lastSelectedRow for reference to shift select
       lastSelectedRow.current = row;
       lastRowUnchecked.current = isSelected;
     },
-    [selectedRows, setSelectedRows, enableSelection, table]
+    [selectedRows, setSelected, enableSelection, table]
   );
 }
 
