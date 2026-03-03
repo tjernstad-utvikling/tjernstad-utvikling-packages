@@ -18,7 +18,7 @@ import {
   type Updater,
   type VisibilityState
 } from '@tanstack/react-table';
-import { useMemo, type PropsWithChildren, type ReactElement } from 'react';
+import { useEffect, useMemo, useRef, useState, type PropsWithChildren, type ReactElement } from 'react';
 
 import { CheckboxHeaderCell } from './components/selection';
 import { ColumnSelect } from './components/columnSelect';
@@ -131,11 +131,52 @@ export function TuTable<T extends Record<string, unknown>>({ ...props }: PropsWi
     return table.getPreFilteredRowModel().rows.filter((row) => selectedIds.has(String(row.getValue('id'))));
   }, [props.enableSelection, props.selectedIds, table]);
 
+  const [localSelectedRows, setLocalSelectedRows] = useState<Row<T>[]>([]);
+  const isMountedRef = useRef(false);
+  const didInitSelectionRef = useRef(false);
+  const setSelectedRef = useRef(props.setSelected);
+
+  useEffect(() => {
+    setSelectedRef.current = props.setSelected;
+  }, [props.setSelected]);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    setLocalSelectedRows((prev) => {
+      const prevIds = prev.map((row) => row.id);
+      const nextIds = selectedRows.map((row) => row.id);
+      const hasEqualSelection = prevIds.length === nextIds.length && prevIds.every((id) => nextIds.includes(id));
+
+      if (hasEqualSelection) return prev;
+      return selectedRows;
+    });
+  }, [selectedRows]);
+
+  useEffect(() => {
+    if (!props.enableSelection || !isMountedRef.current) return;
+
+    if (!didInitSelectionRef.current) {
+      didInitSelectionRef.current = true;
+      return;
+    }
+
+    const notify = setSelectedRef.current;
+    if (notify) notify(localSelectedRows);
+  }, [localSelectedRows, props.enableSelection]);
+
+  const localSelectedRowIdSet = useMemo(() => new Set(localSelectedRows.map((row) => row.id)), [localSelectedRows]);
+
   const handleRowSelection = useRowSelection({
-    selectedRows,
+    selectedRows: localSelectedRows,
+    setSelectedRows: setLocalSelectedRows,
     table,
-    enableSelection: props.enableSelection,
-    setSelected: props.setSelected
+    enableSelection: props.enableSelection
   });
 
   return (
@@ -158,7 +199,7 @@ export function TuTable<T extends Record<string, unknown>>({ ...props }: PropsWi
             {table.getHeaderGroups().map((headerGroup) => (
               <TwTableRow key={headerGroup.id}>
                 {props.enableSelection && (
-                  <CheckboxHeaderCell setSelected={props.setSelected} selectedRows={selectedRows} table={table} />
+                  <CheckboxHeaderCell setSelectedRows={setLocalSelectedRows} selectedRows={localSelectedRows} table={table} />
                 )}
                 {headerGroup.headers.map((header) => {
                   return <HeaderCell key={header.id} header={header} table={table} />;
@@ -177,7 +218,7 @@ export function TuTable<T extends Record<string, unknown>>({ ...props }: PropsWi
                   key={row.id}
                   row={row}
                   state={props.tableState}
-                  isSelected={!!selectedRows?.find((r) => r.id === row.id)}
+                  isSelected={localSelectedRowIdSet.has(row.id)}
                   rowClassName={getRowClassName(row)}
                 />
               );

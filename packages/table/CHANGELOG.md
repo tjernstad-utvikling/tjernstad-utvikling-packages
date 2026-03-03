@@ -1,5 +1,11 @@
 # @tjernstad-utvikling/table-tw
 
+## 0.6.3
+
+### Patch Changes
+
+- add local selection state
+
 ## 0.6.2
 
 ### Patch Changes
