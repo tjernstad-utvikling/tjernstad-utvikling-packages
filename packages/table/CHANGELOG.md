@@ -1,5 +1,11 @@
 # @tjernstad-utvikling/table-tw
 
+## 0.6.2
+
+### Patch Changes
+
+- change the selection implementation
+
 ## 0.6.1
 
 ### Patch Changes

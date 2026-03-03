@@ -18,7 +18,7 @@ import {
   type Updater,
   type VisibilityState
 } from '@tanstack/react-table';
-import { useState, type PropsWithChildren, type ReactElement } from 'react';
+import { useMemo, type PropsWithChildren, type ReactElement } from 'react';
 
 import { CheckboxHeaderCell } from './components/selection';
 import { ColumnSelect } from './components/columnSelect';
@@ -124,15 +124,15 @@ export function TuTable<T extends Record<string, unknown>>({ ...props }: PropsWi
     return '';
   }
 
-  const [selectedRows, setSelectedRows] = useState<Row<T>[]>(() =>
-    table.getPreFilteredRowModel().rows.filter((r) => {
-      return props.selectedIds?.find((o) => o === r?.getValue('id'));
-    })
-  );
+  const selectedRows = useMemo(() => {
+    if (!props.enableSelection) return [] as Row<T>[];
+
+    const selectedIds = new Set((props.selectedIds ?? []).map((id) => String(id)));
+    return table.getPreFilteredRowModel().rows.filter((row) => selectedIds.has(String(row.getValue('id'))));
+  }, [props.enableSelection, props.selectedIds, table]);
 
   const handleRowSelection = useRowSelection({
     selectedRows,
-    setSelectedRows,
     table,
     enableSelection: props.enableSelection,
     setSelected: props.setSelected
@@ -158,7 +158,7 @@ export function TuTable<T extends Record<string, unknown>>({ ...props }: PropsWi
             {table.getHeaderGroups().map((headerGroup) => (
               <TwTableRow key={headerGroup.id}>
                 {props.enableSelection && (
-                  <CheckboxHeaderCell setSelected={props.setSelected} setSelectedRows={setSelectedRows} selectedRows={selectedRows} table={table} />
+                  <CheckboxHeaderCell setSelected={props.setSelected} selectedRows={selectedRows} table={table} />
                 )}
                 {headerGroup.headers.map((header) => {
                   return <HeaderCell key={header.id} header={header} table={table} />;

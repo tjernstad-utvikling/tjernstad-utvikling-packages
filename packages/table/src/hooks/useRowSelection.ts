@@ -4,12 +4,11 @@ import { useCallback, useRef } from 'react';
 interface UseRowSelectionProps<T> {
   selectedRows: Row<T>[];
   table: Table<T>;
-  setSelectedRows: (rows: Row<T>[]) => void;
   setSelected?: (rows: Row<T>[]) => void;
   enableSelection?: boolean;
 }
 
-export function useRowSelection<T>({ selectedRows, table, setSelectedRows, setSelected, enableSelection }: UseRowSelectionProps<T>) {
+export function useRowSelection<T>({ selectedRows, table, setSelected, enableSelection }: UseRowSelectionProps<T>) {
   const lastSelectedRow = useRef<Row<T> | undefined>(undefined);
   const lastRowUnchecked = useRef<boolean>(false);
 
@@ -87,10 +86,7 @@ export function useRowSelection<T>({ selectedRows, table, setSelectedRows, setSe
         }
       }
 
-      if (setSelected && enableSelection) {
-        setSelectedRows(updatedSelectedRows);
-        setSelected(updatedSelectedRows);
-      }
+      if (setSelected && enableSelection) setSelected(updatedSelectedRows);
       // set lastSelectedRow for reference to shift select
       lastSelectedRow.current = row;
       lastRowUnchecked.current = isSelected;
